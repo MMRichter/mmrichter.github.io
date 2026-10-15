@@ -1,0 +1,1254 @@
+<!doctypehtml>
+    <html lang=es>
+
+    <head>
+        <meta charset=utf-8>
+        <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
+            name=viewport>
+        <title>Swarf — Demo CNC</title>
+        <style>
+            :root {
+                --bg: #101418;
+                --panel: #1b2229;
+                --panel2: #232c35;
+                --line: #313c47;
+                --fg: #dce7f2;
+                --dim: #8ea3b8;
+                --acc: #2f8fd8;
+                --acc2: #6fd0ff;
+                --ok: #47c26a;
+                --warn: #e0a33a;
+                --bad: #d8524a;
+                --bar: 62px;
+                --tap: 46px;
+                --gap: 8px;
+                --gizmoSvg: 104px;
+                --gizmo: 132px
+            }
+
+            * {
+                box-sizing: border-box;
+                -webkit-tap-highlight-color: transparent
+            }
+
+            body,
+            html {
+                margin: 0;
+                height: 100%;
+                overflow: hidden;
+                background: var(--bg);
+                color: var(--fg);
+                font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+                user-select: none;
+                -webkit-user-select: none;
+                overscroll-behavior: none
+            }
+
+            #canvas {
+                display: block;
+                width: 100vw;
+                height: 100vh;
+                height: 100dvh;
+                outline: 0;
+                touch-action: none
+            }
+
+            #hud {
+                position: fixed;
+                top: calc(var(--gap) + var(--gizmo) + env(safe-area-inset-top));
+                left: calc(var(--gap) + env(safe-area-inset-left));
+                background: rgba(16, 20, 24, .72);
+                border: 1px solid var(--line);
+                border-radius: 10px;
+                padding: 8px 10px;
+                font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace;
+                pointer-events: none;
+                min-width: 186px;
+                backdrop-filter: blur(6px);
+                z-index: 34
+            }
+
+            #hud b {
+                color: var(--acc2);
+                font-weight: 600
+            }
+
+            #hud .row {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px
+            }
+
+            #hud .k {
+                color: var(--dim)
+            }
+
+            #progWrap {
+                height: 5px;
+                background: #2a343d;
+                border-radius: 3px;
+                margin-top: 5px;
+                overflow: hidden
+            }
+
+            #progBar {
+                height: 100%;
+                width: 0%;
+                background: linear-gradient(90deg, var(--acc), var(--acc2))
+            }
+
+            #fault {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                padding: 10px 14px;
+                z-index: 48;
+                background: rgba(216, 82, 74, .92);
+                color: #fff;
+                font-size: 14px;
+                font-weight: 600;
+                display: none;
+                align-items: center;
+                gap: 12px;
+                padding-top: calc(10px + env(safe-area-inset-top))
+            }
+
+            #fault.on {
+                display: flex
+            }
+
+            #fault button {
+                margin-left: auto
+            }
+
+            #rightstack {
+                position: fixed;
+                right: calc(var(--gap) + env(safe-area-inset-right));
+                top: calc(var(--gap) + env(safe-area-inset-top));
+                display: flex;
+                flex-direction: column;
+                gap: var(--gap);
+                max-height: calc(100dvh - var(--bar) - 2 * var(--gap));
+                z-index: 35
+            }
+
+            .float {
+                width: min(296px, 56vw);
+                background: rgba(27, 34, 41, .94);
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+                backdrop-filter: blur(8px);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                flex: 0 1 auto;
+                min-height: 0
+            }
+
+            .float>header {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 10px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: .1em;
+                color: var(--dim)
+            }
+
+            .float>header .title {
+                flex: 1
+            }
+
+            .float>header .mini {
+                min-height: 30px;
+                width: 34px;
+                padding: 0;
+                border-radius: 8px;
+                font-size: 15px
+            }
+
+            .float .body {
+                overflow-y: auto;
+                padding: 0 10px 10px;
+                min-height: 0
+            }
+
+            .float.min .body {
+                display: none
+            }
+
+            .lbl {
+                color: var(--dim);
+                font-size: 10px;
+                letter-spacing: .1em;
+                margin: 8px 0 4px
+            }
+
+            .lbl:first-child {
+                margin-top: 0
+            }
+
+            .rowline {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin: 5px 0
+            }
+
+            .rowline .name {
+                flex: 0 0 22px;
+                font: 700 13px ui-monospace, monospace;
+                color: var(--dim)
+            }
+
+            .rowline .val {
+                flex: 0 0 58px;
+                text-align: right;
+                font: 600 12px ui-monospace, monospace
+            }
+
+            .btn,
+            button {
+                min-height: 40px;
+                padding: 0 12px;
+                border-radius: 9px;
+                background: var(--panel2);
+                color: var(--fg);
+                border: 1px solid var(--line);
+                font-size: 14px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px
+            }
+
+            .btn:active,
+            button:active {
+                background: #2f3a45
+            }
+
+            button.acc {
+                background: var(--acc);
+                border-color: var(--acc2);
+                color: #fff
+            }
+
+            button.ok {
+                background: #1f7a3d;
+                border-color: #35a95c;
+                color: #fff
+            }
+
+            button.warn {
+                background: #8a6220;
+                border-color: var(--warn);
+                color: #fff
+            }
+
+            button.sel {
+                background: var(--acc);
+                border-color: var(--acc2);
+                color: #fff
+            }
+
+            button.big {
+                min-height: var(--tap);
+                font-size: 16px
+            }
+
+            button[disabled] {
+                opacity: .4
+            }
+
+            .btns {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px
+            }
+
+            .btns.grow>button {
+                flex: 1 1 0
+            }
+
+            .grid2 {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px
+            }
+
+            .stickWrap {
+                display: flex;
+                justify-content: center;
+                padding: 2px 0 4px
+            }
+
+            .stick {
+                position: relative;
+                width: min(148px, 40vw);
+                aspect-ratio: 1/1;
+                border-radius: 50%;
+                background: radial-gradient(circle at 50% 42%, #2c3742 0, #19212a 100%);
+                border: 1px solid var(--line);
+                box-shadow: inset 0 2px 12px rgba(0, 0, 0, .55);
+                touch-action: none;
+                cursor: grab
+            }
+
+            .stick .knob {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                width: 40%;
+                height: 40%;
+                border-radius: 50%;
+                background: linear-gradient(180deg, var(--acc2), var(--acc));
+                border: 2px solid #0d1116;
+                transform: translate(-50%, -50%);
+                box-shadow: 0 3px 10px rgba(0, 0, 0, .5)
+            }
+
+            .stick .hint {
+                position: absolute;
+                color: var(--dim);
+                font: 700 9px ui-monospace, monospace;
+                pointer-events: none
+            }
+
+            .stick .hx {
+                right: 5px;
+                top: 50%;
+                transform: translateY(-50%)
+            }
+
+            .stick .hy {
+                left: 50%;
+                top: 3px;
+                transform: translateX(-50%)
+            }
+
+            .chips {
+                display: flex;
+                gap: 5px
+            }
+
+            .chips button {
+                flex: 1 1 0;
+                min-height: 34px;
+                font-size: 12px;
+                padding: 0
+            }
+
+            input[type=range] {
+                -webkit-appearance: none;
+                appearance: none;
+                flex: 1 1 auto;
+                height: 34px;
+                background: 0 0;
+                margin: 0
+            }
+
+            input[type=range]::-webkit-slider-runnable-track {
+                height: 7px;
+                border-radius: 4px;
+                background: #2f3a45
+            }
+
+            input[type=range]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 26px;
+                height: 26px;
+                margin-top: -10px;
+                border-radius: 50%;
+                background: var(--acc2);
+                border: 2px solid #0d1116
+            }
+
+            input[type=range]::-moz-range-track {
+                height: 7px;
+                border-radius: 4px;
+                background: #2f3a45
+            }
+
+            input[type=range]::-moz-range-thumb {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: var(--acc2);
+                border: 2px solid #0d1116
+            }
+
+            input[type=number],
+            input[type=text],
+            select {
+                min-height: 40px;
+                padding: 0 8px;
+                border-radius: 9px;
+                font-size: 14px;
+                background: var(--panel2);
+                color: var(--fg);
+                border: 1px solid var(--line);
+                width: 100%
+            }
+
+            .prog {
+                height: 8px;
+                background: #2a343d;
+                border-radius: 4px;
+                overflow: hidden;
+                margin-top: 6px
+            }
+
+            .prog>div {
+                height: 100%;
+                width: 0%;
+                background: linear-gradient(90deg, var(--acc), var(--acc2))
+            }
+
+            .code {
+                font: 12px/1.55 ui-monospace, Menlo, Consolas, monospace;
+                background: #12181d;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                padding: 6px 0;
+                overflow-x: auto;
+                min-height: 120px
+            }
+
+            .code .cl {
+                display: flex;
+                gap: 10px;
+                padding: 1px 10px;
+                white-space: pre
+            }
+
+            .code .cl .n {
+                color: #5b6b7b;
+                min-width: 36px;
+                text-align: right;
+                user-select: none;
+                flex: 0 0 36px
+            }
+
+            .code .cl.cur {
+                background: rgba(71, 194, 106, .22);
+                color: #fff
+            }
+
+            .code .cl.cur .n {
+                color: #fff
+            }
+
+            .code .cl .t {
+                color: var(--fg)
+            }
+
+            .code .empty {
+                color: var(--dim);
+                padding: 4px 10px
+            }
+
+            .code.mini {
+                font-size: 11px;
+                line-height: 1.45;
+                max-height: 124px;
+                touch-action: none;
+                cursor: grab
+            }
+
+            .code {
+                touch-action: none;
+                cursor: grab
+            }
+
+            .help {
+                font: 11px/1.6 ui-monospace, Menlo, Consolas, monospace;
+                color: var(--fg);
+                background: #12181d;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                padding: 10px 12px;
+                white-space: pre;
+                overflow-x: auto
+            }
+
+            .help b {
+                color: var(--acc2)
+            }
+
+            .log {
+                font: 11px/1.5 ui-monospace, monospace;
+                color: var(--dim);
+                background: #12181d;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                padding: 8px;
+                max-height: 150px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+                word-break: break-all
+            }
+
+            .note {
+                color: var(--dim);
+                font-size: 11px;
+                margin: 6px 0 0
+            }
+
+            .jogTop {
+                display: flex;
+                gap: 10px;
+                align-items: flex-start
+            }
+
+            .jogStickCol {
+                flex: 1 1 auto;
+                min-width: 0
+            }
+
+            .jogZCol {
+                flex: 0 0 auto;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px
+            }
+
+            .vslide {
+                position: relative;
+                width: 46px;
+                height: 136px;
+                border-radius: 9px;
+                background: #2a343d;
+                border: 1px solid var(--line);
+                overflow: hidden;
+                touch-action: none;
+                cursor: ns-resize
+            }
+
+            .vslide .vfill {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 0%;
+                background: linear-gradient(0deg, var(--acc), var(--acc2));
+                opacity: .35
+            }
+
+            .vslide .vthumb {
+                position: absolute;
+                left: 50%;
+                bottom: 0;
+                width: 34px;
+                height: 24px;
+                border-radius: 7px;
+                background: linear-gradient(180deg, var(--acc2), var(--acc));
+                border: 2px solid #0d1116;
+                transform: translate(-50%, 50%);
+                box-shadow: 0 3px 10px rgba(0, 0, 0, .5)
+            }
+
+            .vslide .vtop {
+                position: absolute;
+                left: 0;
+                right: 0;
+                top: 3px;
+                text-align: center;
+                color: var(--dim);
+                font: 700 9px ui-monospace, monospace;
+                pointer-events: none
+            }
+
+            .moreBtn {
+                display: none;
+                width: 100%;
+                margin-top: 8px
+            }
+
+            .jogMore {
+                display: block
+            }
+
+            #gizmo {
+                position: fixed;
+                left: calc(var(--gap) + env(safe-area-inset-left));
+                top: calc(var(--gap) + env(safe-area-inset-top));
+                z-index: 36;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 1px;
+                width: var(--gizmoSvg)
+            }
+
+            #gizmoSvg {
+                width: var(--gizmoSvg);
+                height: var(--gizmoSvg);
+                display: block;
+                touch-action: none
+            }
+
+            #gizmoSvg .plate {
+                fill: rgba(255, 255, 255, .30);
+                stroke: rgba(255, 255, 255, .10);
+                stroke-width: 1.5
+            }
+
+            #gizmoSvg .cshadow {
+                fill: rgba(255, 255, 255, .40)
+            }
+
+            #gizmoSvg .axline {
+                stroke-width: 5.5;
+                stroke-linecap: round
+            }
+
+            #gizmoSvg .node {
+                cursor: pointer
+            }
+
+            #gizmoSvg .node .hit {
+                fill: transparent
+            }
+
+            #gizmoSvg .node .dot {
+                stroke: rgba(0, 0, 0, .5);
+                stroke-width: 2
+            }
+
+            #gizmoSvg .node .lbl {
+                font: 700 20px ui-monospace, Menlo, Consolas, monospace;
+                fill: #fff;
+                text-anchor: middle;
+                pointer-events: none
+            }
+
+            #gizmoSvg .node:hover .dot {
+                fill: #fff
+            }
+
+            #gizmoSvg .node:hover .lbl {
+                fill: #000
+            }
+
+            #gizmoSvg .node.far .dot {
+                opacity: .4
+            }
+
+            #gizmoSvg .node.far .lbl {
+                opacity: 0
+            }
+
+            #gizmoSvg .node.far:hover .lbl {
+                opacity: 1
+            }
+
+            #gizmoSvg .axline.far {
+                opacity: .2
+            }
+
+            #gizmoSvg .axX .dot {
+                fill: #e62937
+            }
+
+            #gizmoSvg .axY .dot {
+                fill: #0079f1
+            }
+
+            #gizmoSvg .axZ .dot {
+                fill: #00e430
+            }
+
+            #gizmoSvg .iso .dot {
+                fill: #f5f5f5
+            }
+
+            #gizmoSvg .axline.axX {
+                stroke: #e62937
+            }
+
+            #gizmoSvg .axline.axY {
+                stroke: #0079f1
+            }
+
+            #gizmoSvg .axline.axZ {
+                stroke: #00e430
+            }
+
+            #bOrtho {
+                min-height: 20px;
+                padding: 0 8px;
+                font: 700 10px ui-monospace, Menlo, Consolas, monospace;
+                background: 0 0;
+                border: 0;
+                color: var(--dim)
+            }
+
+            #bOrtho.sel,
+            #bOrtho:hover {
+                background: 0 0;
+                color: var(--acc2)
+            }
+
+            #bar {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 45;
+                height: calc(var(--bar) + env(safe-area-inset-bottom));
+                padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                overflow-x: auto;
+                overflow-y: hidden;
+                background: rgba(16, 20, 24, .9);
+                border-top: 1px solid var(--line);
+                backdrop-filter: blur(8px);
+                scrollbar-width: none
+            }
+
+            #bar::-webkit-scrollbar {
+                display: none
+            }
+
+            .tab {
+                flex: 0 0 auto;
+                min-width: 62px;
+                height: var(--tap);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2px;
+                background: var(--panel);
+                color: var(--fg);
+                border: 1px solid var(--line);
+                border-radius: 10px;
+                font-size: 10px;
+                line-height: 1
+            }
+
+            .tab .ic {
+                font-size: 17px
+            }
+
+            .tab.active {
+                background: var(--acc);
+                border-color: var(--acc2);
+                color: #fff
+            }
+
+            .sep {
+                flex: 0 0 1px;
+                height: 34px;
+                background: var(--line);
+                margin: 0 2px
+            }
+
+            .sheet {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: calc(var(--bar) + env(safe-area-inset-bottom));
+                max-height: 62vh;
+                background: var(--panel);
+                border-top: 1px solid var(--line);
+                border-radius: 14px 14px 0 0;
+                box-shadow: 0 -10px 30px rgba(0, 0, 0, .45);
+                transform: translateY(105%);
+                z-index: 30;
+                transition: transform .18s ease, visibility .18s ease;
+                visibility: hidden;
+                pointer-events: none;
+                display: flex;
+                flex-direction: column
+            }
+
+            .sheet.open {
+                transform: translateY(0);
+                visibility: visible;
+                pointer-events: auto
+            }
+
+            .sheet header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 14px 6px;
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--dim);
+                letter-spacing: .06em
+            }
+
+            .sheet header .grab {
+                width: 40px;
+                height: 4px;
+                border-radius: 2px;
+                background: var(--line)
+            }
+
+            .sheet header .close {
+                margin-left: auto
+            }
+
+            .sheet .body {
+                overflow-y: auto;
+                padding: 4px 14px 16px;
+                -webkit-overflow-scrolling: touch
+            }
+
+            .grp {
+                border-top: 1px solid var(--line);
+                margin-top: 10px;
+                padding-top: 10px
+            }
+
+            .grp:first-child {
+                border-top: 0;
+                margin-top: 0
+            }
+
+            .pill {
+                padding: 3px 9px;
+                border-radius: 999px;
+                background: #2a343d;
+                font: 600 11px ui-monospace, monospace;
+                color: var(--dim)
+            }
+
+            #toast {
+                position: fixed;
+                left: 50%;
+                bottom: calc(var(--bar) + 18px + env(safe-area-inset-bottom));
+                transform: translateX(-50%) translateY(10px);
+                opacity: 0;
+                pointer-events: none;
+                background: rgba(35, 44, 53, .96);
+                border: 1px solid var(--line);
+                color: var(--fg);
+                padding: 9px 16px;
+                border-radius: 999px;
+                font-size: 13px;
+                transition: all .18s ease;
+                z-index: 50;
+                max-width: 90vw;
+                text-align: center
+            }
+
+            #toast.on {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0)
+            }
+
+            #overlay {
+                position: fixed;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 18px;
+                z-index: 60;
+                transition: opacity .35s ease;
+                background: radial-gradient(circle at 50% 40%, #1c2530 0, #0b0e12 100%)
+            }
+
+            #overlay.hidden {
+                opacity: 0;
+                pointer-events: none
+            }
+
+            #title {
+                font-size: 30px;
+                font-weight: 600;
+                letter-spacing: .14em
+            }
+
+            #subtitle {
+                font-size: 13px;
+                color: var(--dim);
+                letter-spacing: .05em
+            }
+
+            #bar2 {
+                width: min(420px, 70vw);
+                height: 6px;
+                background: #1e2833;
+                border-radius: 3px;
+                overflow: hidden
+            }
+
+            #fill {
+                height: 100%;
+                width: 0%;
+                background: linear-gradient(90deg, var(--acc), var(--acc2));
+                transition: width .2s ease
+            }
+
+            #msg {
+                font-size: 12px;
+                color: var(--dim);
+                min-height: 16px
+            }
+
+            #start {
+                display: none
+            }
+
+            #swarf-log {
+                display: none
+            }
+
+            @media (max-width:520px),
+            (max-height:620px) {
+                #hud {
+                    font-size: 11px;
+                    min-width: 150px;
+                    padding: 6px 8px
+                }
+
+                .float {
+                    width: min(266px, 62vw)
+                }
+
+                .float .body {
+                    padding: 0 8px 8px
+                }
+
+                .stick {
+                    width: min(116px, 33vw)
+                }
+
+                .vslide {
+                    height: 104px;
+                    width: 42px
+                }
+
+                button {
+                    min-height: 36px;
+                    font-size: 13px
+                }
+
+                .rowline {
+                    margin: 3px 0
+                }
+
+                .rowline .val {
+                    flex: 0 0 50px
+                }
+
+                .lbl {
+                    margin: 6px 0 3px
+                }
+
+                .moreBtn {
+                    display: inline-flex
+                }
+
+                .jogMore {
+                    display: none
+                }
+
+                .jogMore.open {
+                    display: block
+                }
+
+                :root {
+                    --gizmoSvg: 82px;
+                    --gizmo: 106px
+                }
+
+                #gizmoSvg .node .lbl {
+                    font-size: 17px
+                }
+            }
+        </style>
+    </head>
+
+    <body><canvas id=canvas oncontextmenu=event.preventDefault() tabindex=-1></canvas>
+        <div id=hud>
+            <div class=row><span class=k>G54</span><b id=hPos>—</b></div>
+            <div class=row><span class=k>Husillo</span><span id=hRpm>0 rpm</span></div>
+            <div class=row><span class=k>Carga</span><span id=hLoad>0%</span></div>
+            <div class=row><span class=k>Avance</span><span id=hFeed>0 mm/min</span></div>
+            <div class=row><span class=k>Programa</span><span id=hProg>—</span></div>
+            <div id=progWrap>
+                <div id=progBar></div>
+            </div>
+            <div class=row><span class=k>Corte</span><span id=hCut>—</span></div>
+            <div class=row><span class=k>Sim</span><span id=hSim>—</span></div>
+            <div class=row style=margin-top:4px><span class=k>FPS</span><span id=hFps>—</span></div>
+        </div>
+        <div id=fault><span id=faultMsg>—</span><button onclick=uiReset() class=warn>RESET</button></div>
+        <div id=rightstack>
+            <aside class=float id=float-gcode>
+                <header><span class=title>G-CODE</span><button onclick='uiFloat("gcode")' class=mini>—</button></header>
+                <div class=body>
+                    <div class=rowline><select id=fProg onchange=uiLoad(this.value)></select></div>
+                    <div class="btns grow"><button onclick=uiPlayPause() class="acc big" id=fPlay>▶</button> <button
+                            onclick=uiStep()>STEP</button> <button onclick=uiStop()>STOP</button></div>
+                    <div class=rowline style=margin-top:6px><button onclick=uiSpeed(-1) style="flex:0 0 44px">«</button>
+                        <span class=val id=fSpeed style=flex:1;text-align:center>1x</span> <button onclick=uiSpeed(1)
+                            style="flex:0 0 44px">»</button> <button onclick=uiTurbo() style="flex:0 0 74px"
+                            id=fTurbo>TURBO</button></div>
+                    <div class=prog>
+                        <div id=fProgBar></div>
+                    </div>
+                    <div class=rowline style=margin-top:6px><button onclick=uiOpen() style=flex:1>EXAMINAR .NC…</button>
+                        <button onclick='uiSheet("prog")' style="flex:0 0 92px">▤ PROG</button></div>
+                    <p class=lbl style=display:flex;align-items:center;gap:8px>PROGRAMA <span class=pill id=pvMiniInfo
+                            style=flex:1>—</span> <button onclick=pvToggleFollow()
+                            style="min-height:30px;padding:0 10px" id=pvFollowMini>S</button></p>
+                    <div class="mini code" id=pvMini>
+                        <div class=empty>Sin programa.</div>
+                    </div>
+                    <p class=note id=fMsg>—</p>
+                </div>
+            </aside>
+            <aside class=float id=float-jog>
+                <header><span class=title>JOG</span><button onclick='uiFloat("jog")' class=mini>—</button></header>
+                <div class=body>
+                    <div id=jogLock style=display:none>
+                        <p class=lbl>JOG BLOQUEADO</p>
+                        <p class=note style="margin:2px 0 8px">Hay un programa cargado. El reset lo descarga, limpia los
+                            waypoints y devuelve el control al jog.</p><button onclick=uiReset() style=width:100%
+                            class=warn>RESET MAQUINA</button>
+                    </div>
+                    <div id=jogCtl>
+                        <div class=jogTop>
+                            <div class=jogStickCol>
+                                <p class=lbl style=display:flex;align-items:center;gap:8px>XY <button onclick=uiCamRel()
+                                        style="margin-left:auto;min-height:30px;padding:0 10px" id=bCamRel>EJES</button>
+                                </p>
+                                <div class=stickWrap>
+                                    <div class=stick id=stickXY>
+                                        <div class=knob id=knobXY></div><span class="hint hy">Y+</span><span
+                                            class="hint hx">X+</span>
+                                    </div>
+                                </div>
+                                <div class=chips id=speedChips><button onclick=uiStickSpeed(.25)>lento</button> <button
+                                        onclick=uiStickSpeed(1)>normal</button> <button
+                                        onclick=uiStickSpeed(3)>rapido</button></div>
+                            </div>
+                            <div class=jogZCol>
+                                <p class=lbl>Z</p>
+                                <div class=vslide id=vZ>
+                                    <div class=vfill id=vZfill></div>
+                                    <div class=vthumb id=vZthumb></div><span class=vtop>Z+</span>
+                                </div><span class=val id=vZtxt>0.0</span>
+                            </div>
+                        </div>
+                        <p class=lbl>EJES (G54)</p>
+                        <div class=rowline><span class=name>B</span><input id=jB max=120 min=-35
+                                oninput=uiJogAbs(3,this.value) step=0.5 type=range><span class=val id=vB>0.0</span>
+                        </div>
+                        <div class=rowline><span class=name>C</span><input id=jC max=360 min=0
+                                oninput=uiJogAbs(4,this.value) step=0.5 type=range><span class=val id=vC>0.0</span>
+                        </div>
+                        <div class=rowline style=margin-top:2px><span class=name>0</span> <button onclick=uiZero(0)
+                                style=flex:1>X0</button> <button onclick=uiZero(1) style=flex:1>Y0</button> <button
+                                onclick=uiZero(2) style=flex:1>Z0</button></div>
+                        <p class=lbl>AVANCE DEL JOG</p>
+                        <div class=rowline><input id=fFeed max=5000 min=50 oninput=uiFeed(this.value) step=10
+                                type=range><span class=val id=fFeedV>600</span></div>
+                        <p class=lbl>HUSILLO</p>
+                        <div class="btns grow"><button onclick=uiSpindle() id=fSpOn>MOTOR OFF</button> <button
+                                onclick=uiSpindleDir() id=fSpDir>CW</button> <button onclick=uiCoolant()
+                                id=fCool>COOL</button></div>
+                        <div class=jogMore id=jogMore>
+                            <p class=lbl>RPM</p>
+                            <div class=rowline><input id=fRpm max=8100 min=500 oninput=uiRpm(this.value) step=50
+                                    type=range><span class=val id=fRpmV>8100</span></div>
+                            <p class=lbl>WCS / HERRAMIENTA</p>
+                            <div class=rowline><select id=fWcs onchange=uiWcs(this.value) style=flex:1>
+                                    <option>G54</option>
+                                    <option>G55</option>
+                                    <option>G56</option>
+                                    <option>G57</option>
+                                    <option>G58</option>
+                                    <option>G59</option>
+                                </select></div>
+                            <div class=rowline><span class=name>ATC</span><button onclick=uiSlotDelta(-1)
+                                    style="flex:0 0 40px">−</button><span class=val id=fSlot
+                                    style=flex:1;text-align:center>1</span><button onclick=uiSlotDelta(1)
+                                    style="flex:0 0 40px">+</button></div>
+                            <div class=rowline style=margin-top:4px><button onclick=uiReset() style=flex:1>RESET
+                                    MAQUINA</button></div>
+                        </div><button onclick=uiJogMore() class=moreBtn id=bJogMore>MÁS ▾</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+        <nav id=bar><button onclick='uiFloat("jog")' class=tab id=bJog><span class=ic>✥</span>Jog</button> <button
+                onclick='uiFloat("gcode")' class=tab id=bGcode><span class=ic>⌘</span>G-Code</button> <button
+                onclick='uiSheet("mdi")' class=tab data-sheet=mdi><span class=ic>▸_</span>MDI</button> <button
+                onclick='uiSheet("prog")' class=tab data-sheet=prog><span class=ic>▤</span>Programa</button>
+            <div class=sep></div><button onclick='uiSheet("mat")' class=tab data-sheet=mat><span
+                    class=ic>◍</span>Material</button> <button onclick='uiSheet("stock")' class=tab
+                data-sheet=stock><span class=ic>▣</span>Stock</button> <button onclick=uiHalfToggle() class=tab id=bRes
+                title="Resolución del raymarch"><span class=ic>◐</span><span id=bResTxt>FULL</span></button> <button
+                onclick=uiVolToggle() class=tab id=bVol title="Volumen del stock (DENSE/SPARSE)"><span
+                    class=ic>▦</span><span id=bVolTxt>DENSE</span></button>
+            <div class=sep></div><button onclick=uiViewReset() class=tab><span class=ic>⟲</span>Vista</button>
+        </nav>
+        <section class=sheet id=sheet-prog>
+            <header><span class=grab></span>PROGRAMA <span class=pill id=pvInfo>sin programa</span><button
+                    onclick=uiSheet(null) class=close>✕</button></header>
+            <div class=body>
+                <div class=rowline><button onclick=pvPast(-1) style="flex:0 0 40px">−</button> <span class=note
+                        style="flex:0 0 auto;margin:0">PAST <b id=pvPast>5</b></span> <button onclick=pvPast(1)
+                        style="flex:0 0 40px">+</button> <button onclick=pvToggleFollow() style=flex:1
+                        id=pvFollow>SEGUIR</button> <button onclick=pvFut(1) style="flex:0 0 40px">+</button> <span
+                        class=note style="flex:0 0 auto;margin:0">FUT <b id=pvFut>5</b></span> <button onclick=pvFut(-1)
+                        style="flex:0 0 40px">−</button></div>
+                <div class=rowline id=pvScrollRow><button onclick=pvShift(-1) style=flex:1>▲ subir</button> <button
+                        onclick=pvShift(1) style=flex:1>▼ bajar</button></div>
+                <div class=code id=pvCode>
+                    <div class=empty>Sin programa cargado.</div>
+                </div>
+                <p class=note id=pvNote>SEGUIR centra la ventana en la línea actual; SCROLL la deja fija (▲▼).</p>
+            </div>
+        </section>
+        <section class=sheet id=sheet-mdi>
+            <header><span class=grab></span>TERMINAL MDI <button onclick=uiHelp()
+                    style="margin-left:auto;min-height:34px;padding:0 12px">ⓘ COMANDOS</button> <button
+                    onclick=uiSheet(null) style=margin-left:6px class=close>✕</button></header>
+            <div class=body>
+                <p class=lbl>COMANDO G-CODE DIRECTO</p>
+                <div class=rowline><input id=mdiText onkeydown='"Enter"===event.key&&uiMdi()' placeholder="G0 X10 Y10"
+                        style=flex:1><button onclick=uiMdi() class=acc>ENVIAR</button></div>
+                <p class=note>Ej: <code>G0 X0 Y0 Z10</code> · <code>S3000 M3</code> · <code>G1 X20 F300</code> ·
+                    <code>G10 L2 P1 X0 Y0</code></p>
+                <div class=grp>
+                    <p class=lbl>RESPUESTA</p>
+                    <div class=log id=mdiLog>—</div>
+                </div>
+                <div class=grp id=mdiHelp style=display:none>
+                    <p class=lbl>COMANDOS DISPONIBLES</p>
+                    <div class=help><b>MOVIMIENTO</b> G0 rapido G1 lineal (F) G2 / G3 arco CW / CCW (IJK o R) G17 / G18
+                        / G19 plano G90 / G91 abs / incremental G94 / G95 modo avance G21 metrico G4 P&lt;ms> pausa G28
+                        / G30 home <b>COORDENADAS / COMPENSACION</b> G54 ... G59 work offset G10 L2 P&lt;n> X.. Y.. Z..
+                        fijar WCS G43 / G44 / G49 largo de herramienta G40 / G41 / G42 compensacion de radio (D) T&lt;n>
+                        herramienta D&lt;n> registro de comp <b>CICLOS</b> G81 G82 G83 G73 G84 G80 cancelar R plano Q
+                        paso P dwell F avance <b>HUSILLO / REFRIGERANTE / PROGRAMA</b> S&lt;rpm> M3 CW M4 CCW M5 stop M8
+                        refrigerante ON M9 refrigerante OFF M6 cambio de herramienta M98 P&lt;sub> L&lt;rep> subprograma
+                        M99 retorno M30 fin de programa <b>MACROS / CONTROL DE FLUJO</b> #&lt;n> = &lt;expr> variables
+                        WHILE [&lt;cond>] DO&lt;n> ... END&lt;n> IF [&lt;cond>] GOTO&lt;n> GOTO&lt;n> Operadores: EQ NE
+                        GT LT GE LE AND OR XOR Funciones: SIN COS TAN SQRT ABS FIX ROUND [ ] agrupar expresiones
+                        <b>EJEMPLOS</b> G0 X10 Y10 Z5 G1 Z-2 F150 S3000 M3 G10 L2 P1 X0 Y0 M8</div>
+                    <p class=note>Un movimiento simple (G0/G1) se ejecuta como jog manual; varios waypoints se cargan
+                        como programa y se reproducen con PLAY.</p>
+                </div>
+            </div>
+        </section>
+        <section class=sheet id=sheet-mat>
+            <header><span class=grab></span>MATERIAL<button onclick=uiSheet(null) class=close>✕</button></header>
+            <div class=body>
+                <div class="btns grow" style=align-items:center><button onclick=uiMat(-1)
+                        style="flex:0 0 64px">‹</button>
+                    <div style=flex:1;text-align:center>
+                        <div id=matName style=font-size:17px;font-weight:600>—</div>
+                        <div class=note id=matIdx>—</div>
+                    </div><button onclick=uiMat(1) style="flex:0 0 64px">›</button>
+                </div>
+                <div class=grp>
+                    <p class=lbl>PROPIEDADES FISICAS</p>
+                    <div class=rowline><span class=k style=flex:1>Densidad</span><span class=val id=matDens>—</span>
+                    </div>
+                    <div class=rowline><span class=k style=flex:1>Kc (fuerza especifica)</span><span class=val
+                            id=matKc>—</span></div>
+                    <p class=note>El material cambia el aspecto de la pieza y su resistencia al corte.</p>
+                </div>
+            </div>
+        </section>
+        <section class=sheet id=sheet-stock>
+            <header><span class=grab></span>STOCK & GEOMETRIA<button onclick=uiSheet(null) class=close>✕</button>
+            </header>
+            <div class=body>
+                <div class=grp>
+                    <p class=lbl>DIMENSIONES (mm) — máx 200 en la demo</p>
+                    <div class=rowline><span class=name>X</span><input id=sX max=200 min=10 oninput=uiDims() step=1
+                            type=range><span class=val id=svX>200</span></div>
+                    <div class=rowline><span class=name>Y</span><input id=sY max=200 min=10 oninput=uiDims() step=1
+                            type=range><span class=val id=svY>200</span></div>
+                    <div class=rowline><span class=name>Z</span><input id=sZ max=200 min=5 oninput=uiDims() step=1
+                            type=range><span class=val id=svZ>20</span></div>
+                </div>
+                <div class=grp>
+                    <p class=lbl>FORMA</p>
+                    <div class="btns grow"><button onclick=uiShape(0)>MACIZO</button> <button
+                            onclick=uiShape(1)>CILINDRO</button> <button onclick=uiShape(2)>ESFERA</button></div>
+                    <div class="btns grow" style=margin-top:6px><button onclick=uiShape(3)>TUBO REDONDO</button> <button
+                            onclick=uiShape(4)>TUBO RECT.</button></div>
+                    <div class=rowline style=margin-top:10px><span class=name>EJE</span> <button onclick=uiOrient(0)
+                            class=sel id=oZ>Z</button> <button onclick=uiOrient(1) id=oX>X</button> <button
+                            onclick=uiOrient(2) id=oY>Y</button></div>
+                    <div class=rowline><span class=name>PARED</span><input id=sWall max=30 min=1
+                            oninput=uiOrient(curOrient) step=0.5 type=range value=5><span class=val id=svWall>5</span>
+                    </div>
+                </div>
+                <div class=grp id=buildWrap style=display:none>
+                    <p class=lbl>GENERANDO FORMA…</p>
+                    <div class=prog>
+                        <div id=buildBar></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div id=gizmo><svg aria-label="Gizmo de cámara" id=gizmoSvg viewBox="-100 -100 200 200">
+                <circle class=plate r=100 cx=0 cy=0 />
+                <circle class=cshadow r=22 cx=0 cy=0 />
+                <line class="axline axX" id=gzLineX x1=0 x2=70 y1=0 y2=49.5 />
+                <line class="far axY axline" id=gzLineY x1=0 x2=66.7 y1=0 y2=-47.1 />
+                <line class="axline axZ" id=gzLineZ x1=0 x2=0 y1=0 y2=-72 />
+                <g class="node axX" id=gzN0 onclick=uiViewSnap(4) transform=translate(70,49.5)>
+                    <circle class=hit r=26 />
+                    <circle class=dot r=14.5 /><text class=lbl y=-24>X</text>
+                </g>
+                <g class="node far axY" id=gzN1 onclick=uiViewSnap(3) transform=translate(66.7,-47.1)>
+                    <circle class=hit r=26 />
+                    <circle class=dot r=14.5 /><text class=lbl y=-24>Y</text>
+                </g>
+                <g class="node axZ" id=gzN2 onclick=uiViewSnap(0) transform=translate(0,-72)>
+                    <circle class=hit r=26 />
+                    <circle class=dot r=14.5 /><text class=lbl y=-24>Z</text>
+                </g>
+                <g class="node far axX" id=gzN3 onclick=uiViewSnap(5) transform=translate(-66.7,-47.1)>
+                    <circle class=hit r=24 />
+                    <circle class=dot r=9.1 />
+                </g>
+                <g class="node axY" id=gzN4 onclick=uiViewSnap(2) transform=translate(-70.1,49.5)>
+                    <circle class=hit r=24 />
+                    <circle class=dot r=9.1 />
+                </g>
+                <g class="node far axZ" id=gzN5 onclick=uiViewSnap(1) transform=translate(0,67.6)>
+                    <circle class=hit r=24 />
+                    <circle class=dot r=9.1 />
+                </g>
+                <g class="node far iso" id=gzN6 onclick=uiViewSnap(6) transform=translate(0,0)>
+                    <circle class=hit r=26 />
+                    <circle class=dot r=14.5 />
+                </g>
+            </svg> <button onclick=uiOrtho() id=bOrtho>PERSP</button></div>
+        <div id=toast></div>
+        <pre id=swarf-log></pre>
+        <div id=overlay>
+            <div id=title>SWARF</div>
+            <div id=subtitle>Simulador de mecanizado CNC</div>
+            <div id=bar2>
+                <div id=fill></div>
+            </div>
+            <div id=msg>Cargando…</div><button id=start>COMENZAR</button>
+        </div>
+        <script>var SwarfLog = document.getElementById("swarf-log"); function swarfLog(t) { SwarfLog.textContent += t + "\n"; try { console.log(t) } catch (t) { } } var Module = { canvas: document.getElementById("canvas"), print: function (t) { swarfLog(t) }, printErr: function (t) { swarfLog("ERR: " + t) }, setStatus: function (t) { var e = document.getElementById("msg"); e && t && (e.textContent = t) }, onRuntimeInitialized: function () { var t = document.getElementById("start"); t.style.display = "inline-block", document.getElementById("msg").textContent = "Listo", document.getElementById("fill").style.width = "100%"; var e = function () { document.getElementById("overlay").classList.add("hidden"), document.getElementById("canvas").focus(), uiInit() }; t.addEventListener("click", e), -1 !== location.search.indexOf("autostart") && (e(), document.getElementById("overlay").style.display = "none"); var n = /[?&]sheet=([a-z]+)/.exec(location.search); n && setTimeout((function () { uiSheet(n[1]) }), 400); var o = /[?&]float=([a-z]+)/.exec(location.search); o && setTimeout((function () { uiFloat(o[1], !0) }), 400) }, monitorRunDependencies: function (t) { if (!(t > 0)) { var e = document.getElementById("fill"); e && (e.style.width = "85%") } } }; -1 !== location.search.indexOf("ui-test") && document.addEventListener("DOMContentLoaded", (function () { document.getElementById("overlay").style.display = "none", uiInit() })); var ui = {}, curOrient = 0, activeSheet = null, dragging = 0, stickSpeed = 1, stick = { active: !1, vx: 0, vy: 0 }, floatState = { jog: !0, gcode: !1 }; function cmd(t) { var e = Module["_" + t]; if ("function" == typeof e) return e.apply(null, Array.prototype.slice.call(arguments, 1)) } function cmdStr(t, e) { "function" == typeof Module.ccall && Module.ccall(t, null, ["string"], [e]) } function fmt(t, e) { return (Math.round(t * Math.pow(10, e || 0)) / Math.pow(10, e || 0)).toFixed(e || 0) } function $(t) { return document.getElementById(t) } function uiFloat(t, e) { if (floatState.hasOwnProperty(t)) { var n = !!e || !floatState[t]; n && ("jog" === t && (floatState.gcode = !1), "gcode" === t && (floatState.jog = !1, uiSheet(null))), floatState[t] = n, applyFloats() } } function applyFloats() { ["jog", "gcode"].forEach((function (t) { var e = $("float-" + t); e && e.classList.toggle("min", !floatState[t]); var n = $("jog" === t ? "bJog" : "bGcode"); n && n.classList.toggle("active", !!floatState[t]) })) } function uiSheet(t) { "mdi" === t && floatState.gcode && (floatState.gcode = !1, applyFloats()); for (var e = document.querySelectorAll(".sheet"), n = 0; n < e.length; n++)e[n].classList.remove("open"); for (var o = document.querySelectorAll(".tab[data-sheet]"), a = 0; a < o.length; a++)o[a].classList.remove("active"); if (activeSheet = null, t) { var i = $("sheet-" + t); i && (i.classList.add("open"), activeSheet = t); var r = document.querySelector('.tab[data-sheet="' + t + '"]'); r && r.classList.add("active"), "prog" === t && pvRender() } } function uiJogAbs(t, e) { dragging = 6, cmd("swarf_jog_set", 0 | t, parseFloat(e)) } function uiCamRel() { cmd("swarf_jog_cam_rel", ui.camRel ? 0 : 1) } function uiStickSpeed(t) { stickSpeed = t; for (var e = document.querySelectorAll("#speedChips button"), n = [.25, 1, 3], o = 0; o < e.length; o++)e[o].classList.toggle("sel", n[o] === t) } function uiFeed(t) { dragging = 6, cmd("swarf_set_feedrate", parseFloat(t)) } function uiRpm(t) { dragging = 6, cmd("swarf_spindle", 0 | ui.jogSpOn, 0 | ui.jogDir, parseFloat(t)) } function uiSpindle() { cmd("swarf_spindle", ui.jogSpOn ? 0 : 1, 0 | ui.jogDir, ui.jogRpm || 8100) } function uiSpindleDir() { cmd("swarf_spindle", 0 | ui.jogSpOn, ui.jogDir ? 0 : 1, ui.jogRpm || 8100) } function uiCoolant() { cmd("swarf_coolant", ui.cool ? 0 : 1) } function uiSlotDelta(t) { cmd("swarf_tool_slot", Math.max(1, (ui.slot || 1) + t)) } function uiZero(t) { cmd("swarf_zero_axis", 0 | t) } function uiWcs(t) { cmd("swarf_wcs", 54 + parseInt(String(t).slice(1), 10)) } function uiPlayPause() { cmd("swarf_program_play_pause") } function uiStep() { cmd("swarf_program_step") } function uiStop() { cmd("swarf_program_stop") } function uiSpeed(t) { cmd("swarf_speed", 0 | t) } function uiTurbo() { cmd("swarf_turbo", ui.turbo ? 0 : 1) } function uiLoad(t) { cmd("swarf_program_load", 0 | parseInt(t, 10)) } function uiOpen() { cmd("swarf_program_open") } function uiMat(t) { cmd("swarf_material", 0 | t) } function uiShape(t) { cmd("swarf_stock_shape", 0 | t) } function uiDims() { dragging = 6, cmd("swarf_stock_dims", parseFloat($("sX").value), parseFloat($("sY").value), parseFloat($("sZ").value)) } function uiOrient(t) { cmd("swarf_stock_orient_wall", curOrient = 0 | t, parseFloat($("sWall").value)), uiSyncOrient() } function uiHalfToggle() { cmd("swarf_half_res", ui.half ? 0 : 1) } function uiVolToggle() { cmd("swarf_volume_mode", ui.vol ? 0 : 1) } function uiViewSnap(t) { cmd("swarf_view_snap", 0 | t) } function uiOrtho() { cmd("swarf_view_ortho", ui.ortho ? 0 : 1) } function uiJogMore() { var t = $("jogMore"); if (t) { var e = !t.classList.contains("open"); t.classList.toggle("open", e); var n = $("bJogMore"); n && (n.textContent = e ? "MENOS ▴" : "MÁS ▾") } } function uiReset() { cmd("swarf_reset_machine") } function uiViewReset() { cmd("swarf_view_reset") } function uiMdi() { var t = $("mdiText"); if (t.value) { cmdStr("swarf_mdi", t.value); var e = $("mdiLog"); e.textContent += ("—" === e.textContent ? "" : "\n") + "> " + t.value, e.scrollTop = e.scrollHeight, t.value = "" } } function uiHelp() { var t = $("mdiHelp"); t && (t.style.display = "none" !== t.style.display && t.style.display ? "none" : "block") } function uiSyncOrient() { ["Z", "X", "Y"].forEach((function (t, e) { var n = $("o" + t); n && n.classList.toggle("sel", e === curOrient) })) } function uiInit() { var t = 0 | cmd("swarf_program_count"), e = $("fProg"), n = ["Tornillo M10", "Taladrado ciclo", "Roscado rigido", "Comp. radio", "Bucle WHILE", "Subprogramas", "Macros"]; if (e && 0 === e.options.length) { var o = document.createElement("option"); o.value = -1, o.textContent = "— elegir programa —", e.appendChild(o); for (var a = 0; a < t; a++) { var i = document.createElement("option"); i.value = a, i.textContent = n[a] || "Programa " + (a + 1), e.appendChild(i) } } uiStickSpeed(stickSpeed), applyFloats(), initStick(), initVSlider(), pvBindScroll($("pvCode")), pvBindScroll($("pvMini")), uiSyncOrient(), ["fFeed", "fRpm", "sX", "sY", "sZ", "sWall"].forEach((function (t) { var e = $(t); e && e.addEventListener("pointerup", (function () { dragging = 0 })) })) } var pv = { past: 5, future: 5, follow: !0, top: 0, cur: 0, total: 0, phys: 0, lineNum: 0 }, pvMini = { past: 3, future: 3 }; function pvLine(t) { if ("function" != typeof Module.ccall) return ""; try { return Module.ccall("swarf_program_line", "string", ["number"], [t]) || "" } catch (t) { return "" } } function pvEsc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") } function pvRows(t) { var e = "mini" === t ? pvMini : pv; return 1 + e.past + e.future } function pvTopFor(t) { var e = pv.follow ? Math.max(0, pv.cur - Math.floor(t / 2)) : pv.top; return Math.max(0, Math.min(e, Math.max(0, pv.total - t))) } function pvHtml(t) { for (var e = pvTopFor(t), n = "", o = e; o < Math.min(pv.total, e + t); o++)n += '<div class="cl' + (o === pv.cur ? " cur" : "") + '"><span class="n">' + (o + 1) + '</span><span class="t">' + pvEsc(pvLine(o)) + "</span></div>"; return n } function pvRender() { var t = $("pvCode"); t && (t.innerHTML = pvHtml(pvRows("sheet")) || '<div class="empty">Sin programa cargado.</div>'); var e = $("pvMini"); e && (e.innerHTML = pvHtml(pvRows("mini")) || '<div class="empty">Sin programa.</div>'); var n = pv.total ? "N" + pv.lineNum + " · fisica " + (pv.phys + 1) + "/" + pv.total : "sin programa"; $("pvInfo") && ($("pvInfo").textContent = n), $("pvMiniInfo") && ($("pvMiniInfo").textContent = pv.total ? pv.phys + 1 + "/" + pv.total : "—"), $("pvPast") && ($("pvPast").textContent = pv.past), $("pvFut") && ($("pvFut").textContent = pv.future), ["pvFollow", "pvFollowMini"].forEach((function (t) { var e = $(t); e && (e.classList.toggle("ok", pv.follow), e.textContent = "pvFollow" === t ? pv.follow ? "SEGUIR" : "SCROLL" : pv.follow ? "S" : "M") })), $("pvScrollRow") && ($("pvScrollRow").style.display = pv.follow ? "none" : "flex") } function pvScrollBy(t) { pv.follow = !1, pv.top = Math.max(0, pv.top + t), pvRender() } function pvBindScroll(t) { if (t && !t.dataset.scrollBound) { t.dataset.scrollBound = "1", t.addEventListener("wheel", (function (t) { pvScrollBy(t.deltaY > 0 ? 1 : -1), t.preventDefault() }), { passive: !1 }); var e = 0, n = 0, o = !1; t.addEventListener("pointerdown", (function (a) { o = !0, e = a.clientY, n = pvTopFor("pvMini" === t.id ? pvRows("mini") : pvRows("sheet")), pv.follow = !1; try { t.setPointerCapture(a.pointerId) } catch (t) { } a.preventDefault() })), t.addEventListener("pointermove", (function (t) { if (o) { var a = Math.round((e - t.clientY) / 17); pv.top = Math.max(0, n + a), pvRender(), t.preventDefault() } })), t.addEventListener("pointerup", a), t.addEventListener("pointercancel", a), t.addEventListener("lostpointercapture", a) } function a() { o = !1 } } function pvPast(t) { pv.past = Math.max(0, Math.min(20, pv.past + t)), pvRender() } function pvFut(t) { pv.future = Math.max(0, Math.min(20, pv.future + t)), pvRender() } function pvShift(t) { pvScrollBy(t) } function pvToggleFollow() { pv.follow = !pv.follow, pv.follow && (pv.top = Math.max(0, pv.cur - pv.past)), pvRender() } function initStick() { var t = $("stickXY"), e = $("knobXY"); function n(t, n) { e.style.transform = "translate(calc(-50% + " + t + "px), calc(-50% + " + n + "px))" } function o(e) { var o = t.getBoundingClientRect(), a = .34 * o.width, i = e.clientX - (o.left + o.width / 2), r = e.clientY - (o.top + o.height / 2), l = Math.sqrt(i * i + r * r); l > a && (i *= a / l, r *= a / l), n(i, r), stick.vx = i / a, stick.vy = r / a } function a() { stick.active = !1, stick.vx = 0, stick.vy = 0, n(0, 0) } t && !t.dataset.ready && (t.dataset.ready = "1", t.addEventListener("pointerdown", (function (e) { stick.active = !0; try { t.setPointerCapture(e.pointerId) } catch (t) { } o(e), e.preventDefault() })), t.addEventListener("pointermove", (function (t) { stick.active && (o(t), t.preventDefault()) })), t.addEventListener("pointerup", a), t.addEventListener("pointercancel", a), t.addEventListener("lostpointercapture", a)) } var Z_MIN = -16, Z_MAX = 390; function uiSetVSlider(t) { var e = Math.max(0, Math.min(1, (t - Z_MIN) / (Z_MAX - Z_MIN))), n = $("vZfill"); n && (n.style.height = 100 * e + "%"); var o = $("vZthumb"); o && (o.style.bottom = 100 * e + "%"); var a = $("vZtxt"); a && (a.textContent = fmt(t, 1)) } function initVSlider() { var t = $("vZ"); if (t && !t.dataset.ready) { t.dataset.ready = "1"; var e = !1; t.addEventListener("pointerdown", (function (o) { e = !0; try { t.setPointerCapture(o.pointerId) } catch (t) { } n(o), o.preventDefault() })), t.addEventListener("pointermove", (function (t) { e && (n(t), t.preventDefault()) })), t.addEventListener("pointerup", o), t.addEventListener("pointercancel", o), t.addEventListener("lostpointercapture", o) } function n(e) { var n = t.getBoundingClientRect(), o = 1 - Math.max(0, Math.min(1, (e.clientY - n.top) / Math.max(1, n.height))), a = Z_MIN + o * (Z_MAX - Z_MIN); dragging = 6, cmd("swarf_jog_set", 2, a), uiSetVSlider(a) } function o() { e = !1 } } var gzLast = ""; function gizUpdate(t) { if (t && t !== gzLast) { gzLast = t; for (var e = String(t).split(";"), n = 0; n < e.length && n < 7; n++) { var o = e[n].split(","); if (!(o.length < 3)) { var a = parseFloat(o[0]) || 0, i = parseFloat(o[1]) || 0, r = "1" === o[2], l = $("gzN" + n); if (l && (l.setAttribute("transform", "translate(" + a.toFixed(1) + "," + i.toFixed(1) + ")"), l.classList.toggle("far", !r), n < 3)) { var s = $("gzLine" + "XYZ".charAt(n)); s && (s.setAttribute("x2", a.toFixed(1)), s.setAttribute("y2", i.toFixed(1)), s.classList.toggle("far", !r)) } } } } } window.swarfOnMessage = function (t) { var e = $("toast"); e.textContent = t, e.classList.add("on"), clearTimeout(window.__toastT), window.__toastT = setTimeout((function () { e.classList.remove("on") }), 2200); var n = $("fMsg"); n && (n.textContent = t) }, window.swarfOnState = function (t) { var e; try { e = JSON.parse(t) } catch (t) { return } if (ui = e, stick.active && (Math.abs(stick.vx) > .02 || Math.abs(stick.vy) > .02)) { var n = Math.min(.1, 1 / Math.max(1, e.fps || 30)); cmd("swarf_jog_stick", stick.vx, -stick.vy, 90 * stickSpeed, n) } var o = !!e.progLoaded; $("jogLock") && ($("jogLock").style.display = o ? "block" : "none"), $("jogCtl") && ($("jogCtl").style.display = o ? "none" : "block"), o && stick.active && (stick.active = !1, stick.vx = 0, stick.vy = 0), $("hPos").textContent = fmt(e.px, 1) + ", " + fmt(e.py, 1) + ", " + fmt(e.pz, 1), $("hRpm").textContent = fmt(e.rpm, 0) + " rpm", $("hLoad").textContent = fmt(e.load, 0) + "%", $("hFeed").textContent = fmt(e.feed, 0) + " mm/min", $("hProg").textContent = e.prog || "—", $("progBar").style.width = fmt(e.progPct, 1) + "%", $("fProgBar").style.width = fmt(e.progPct, 1) + "%", $("hFps").textContent = e.fps, $("hCut") && ($("hCut").textContent = fmt(e.cMs, 1) + "ms · " + (0 | e.cVox) + "v · " + (0 | e.cChunks) + "ch"), $("hSim") && ($("hSim").textContent = fmt(e.eff, 2) + "× · " + fmt(0 === e.vol ? e.sMs : e.dMs, 2) + "ms"), $("fault").classList.toggle("on", !!e.fault), e.fault && ($("faultMsg").textContent = "⚠ " + (e.faultMsg || "FALLA")); var a = $("fPlay"); a.textContent = 2 === e.progState ? "⏸" : "▶", a.classList.toggle("ok", 2 === e.progState), $("fSpeed").textContent = e.speed + "x", $("fTurbo").classList.toggle("sel", !!e.turbo); var i = $("fProg"); i && e.progIdx >= 0 && i.value !== String(e.progIdx) && (i.value = String(e.progIdx)), dragging <= 0 && (uiSetVSlider(e.jogZ), $("jB").value = e.jogB, $("vB").textContent = fmt(e.jogB, 1), $("jC").value = e.jogC, $("vC").textContent = fmt(e.jogC, 1)), $("fFeedV").textContent = fmt(e.jogFeed, 0), dragging <= 0 && ($("fFeed").value = e.jogFeed), $("fRpmV").textContent = fmt(e.jogRpm, 0), dragging <= 0 && ($("fRpm").value = e.jogRpm), dragging > 0 && dragging--; var r = $("fSpOn"); r.textContent = e.jogSpOn ? "MOTOR ON" : "MOTOR OFF", r.classList.toggle("ok", !!e.jogSpOn), $("fSpDir").textContent = e.jogDir ? "CCW" : "CW"; var l = $("fCool"); l.textContent = e.cool ? "COOL ON" : "COOL", l.classList.toggle("ok", !!e.cool), $("fSlot").textContent = e.slot; var s = $("bCamRel"); s && (s.textContent = e.camRel ? "CAM" : "EJES", s.classList.toggle("sel", !!e.camRel)), $("fWcs").value !== "G" + e.wcs && ($("fWcs").value = "G" + e.wcs), pv.lineNum = e.progLine || 0, pv.phys = e.progPhys || 0, pv.cur = e.progPhys || 0; var c = pv.total !== (e.progLines || 0); pv.total = e.progLines || 0, "prog" === activeSheet && (c || pv.follow) || c || pv.follow ? pvRender() : $("pvMiniInfo") && ($("pvMiniInfo").textContent = pv.total ? pv.phys + 1 + "/" + pv.total : "—"), $("matName").textContent = e.matName || "—", $("matIdx").textContent = e.mat + 1 + " / " + e.matCount; var p = $("sX"), u = $("sY"), d = $("sZ"); dragging <= 0 && (p.value = e.dimX, u.value = e.dimY, d.value = e.dimZ, $("svX").textContent = fmt(e.dimX, 0), $("svY").textContent = fmt(e.dimY, 0), $("svZ").textContent = fmt(e.dimZ, 0)), $("svWall").textContent = fmt($("sWall").value, 1), $("buildWrap").style.display = e.building ? "block" : "none", $("buildBar").style.width = fmt(100 * e.buildPct, 0) + "%", $("bResTxt") && ($("bResTxt").textContent = e.half ? "MITAD" : "FULL"), $("bRes") && $("bRes").classList.toggle("active", !!e.half), $("bVolTxt") && ($("bVolTxt").textContent = 0 === e.vol ? "SPARSE" : "DENSE"), $("bVol") && $("bVol").classList.toggle("active", 0 === e.vol); var v = $("bOrtho"); v && (v.textContent = e.ortho ? "ORTHO" : "PERSP", v.classList.toggle("sel", !!e.ortho)), gizUpdate(e.giz) }</script>
+        <script async src=SwarfWeb.js></script>
+    </body>
+
+    </html>

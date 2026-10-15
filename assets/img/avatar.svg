@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320" role="img" aria-label="Portrait placeholder">
+  <style>
+    .bg { fill: #dbe4f0; }
+    .fg { fill: #64748b; }
+    .fg-strong { fill: #475569; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #1b2740; }
+      .fg { fill: #94a3b8; }
+      .fg-strong { fill: #cbd5e1; }
+    }
+  </style>
+  <rect class="bg" width="320" height="320"/>
+  <g class="fg" fill="none" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="160" cy="116" r="44"/>
+    <path d="M72 250c0-48 40-78 88-78s88 30 88 78"/>
+  </g>
+  <text class="fg-strong" x="160" y="296" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="4">MR</text>
+</svg>

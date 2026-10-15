@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Screenshot placeholder">
+  <style>
+    .bg { fill: #eef2f7; }
+    .ln { stroke: #94a3b8; }
+    .fg { fill: #64748b; }
+    .fg-strong { fill: #475569; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #131c2e; }
+      .ln { stroke: #475569; }
+      .fg { fill: #94a3b8; }
+      .fg-strong { fill: #cbd5e1; }
+    }
+  </style>
+  <rect class="bg" width="1280" height="720"/>
+  <rect class="ln" x="24" y="24" width="1232" height="672" rx="14" fill="none" stroke-width="4" stroke-dasharray="16 12"/>
+  <g class="ln" fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="498" y="244" width="284" height="204" rx="14"/>
+    <path d="M498 304h284"/>
+    <path d="M546 348h72"/>
+    <path d="M546 392h130"/>
+  </g>
+  <circle class="fg" cx="730" cy="288" r="14"/>
+  <circle class="fg" cx="760" cy="288" r="14"/>
+  <text class="fg-strong" x="640" y="522" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="42" font-weight="700">Logistics</text>
+  <text class="fg" x="640" y="572" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="26">Placeholder — captura 1/1</text>
+</svg>

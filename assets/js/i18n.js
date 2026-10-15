@@ -1,0 +1,40 @@
+window.I18N = {
+  en: {
+    "page.title": "Matías Richter — Software Engineering & Systems Architecture",
+    "page.description": "Technical portfolio of Matías Richter. Exploring software architecture, high-performance computing in C++, and scalable backend solutions through detailed engineering case studies.",
+    "a11y.skip": "Skip to content",
+    "about.role": "Software Engineer Student | High-Performance & Backend Systems",
+    "about.bio": "I design and build software with a focus on performance and structural integrity, specializing in modern C++ and scalable backend architectures. Since most of my recent projects live in private repositories, I created this space to share the engineering decisions, problem-solving processes, and system designs behind my code.",
+    "about.avatarAlt": "Portrait of Matías Richter",
+    "about.location": "Tandil, Buenos Aires",
+    "intro.lead": "Professional Overview:",
+    "intro.body": "This portfolio serves as a technical dossier. While I can't always make the source code of my projects public, I can share how they are built. Here you will find architectural case studies that detail my approach to high-performance computing, low-level optimization, and developing efficient systems from the ground up.",
+    "projects.title": "Selected Work",
+    "carousel.label": "Project gallery",
+    "carousel.prev": "Previous item",
+    "carousel.next": "Next item",
+    "video.play": "Play video",
+    "video.watch": "Watch on YouTube",
+    "video.missing": "Invalid YouTube link",
+    "footer.rights": "Matías Richter. All rights reserved."
+  },
+  es: {
+    "page.title": "Matías Richter — Estudiante de Ingenieria de Software y Arquitectura de Sistemas",
+    "page.description": "Portfolio técnico de Matías Richter. Explorando arquitectura de software, computación de alto rendimiento en C++ y soluciones backend escalables a través de casos de estudio.",
+    "a11y.skip": "Ir al contenido",
+    "about.role": "Ingenieria de Software | High-Performance & Backend",
+    "about.bio": "Diseño y construyo software priorizando el rendimiento y la integridad estructural, especializándome en C++ moderno y arquitecturas backend escalables. Como gran parte de mis proyectos recientes viven en repositorios privados, creé este espacio para compartir las decisiones de diseño, la resolución de problemas y la arquitectura detrás de mi código.",
+    "about.avatarAlt": "Retrato de Matías Richter",
+    "about.location": "Tandil, Buenos Aires",
+    "intro.lead": "Resumen profesional:",
+    "intro.body": "Este portfolio funciona como un dossier técnico. Aunque no siempre puedo subir a un repositorio público el código de los proyectos en los que trabajo, sí puedo mostrar cómo están construidos. Aquí presento casos de estudio que detallan mi enfoque en computación de alto rendimiento, optimizaciones de bajo nivel y el desarrollo de sistemas eficientes desde sus cimientos.",
+    "projects.title": "Proyectos Destacados",
+    "carousel.label": "Galería del proyecto",
+    "carousel.prev": "Elemento anterior",
+    "carousel.next": "Elemento siguiente",
+    "video.play": "Reproducir el video",
+    "video.watch": "Ver en YouTube",
+    "video.missing": "Enlace de YouTube inválido",
+    "footer.rights": "Matías Richter. Todos los derechos reservados."
+  }
+};

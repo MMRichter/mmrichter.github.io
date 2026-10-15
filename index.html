@@ -1,272 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matías Richter - Software Developer & Systems Engineering</title>
-    <style>
-        :root {
-            --bg-color: #f8fafc;
-            --text-main: #1e293b;
-            --text-muted: #475569;
-            --accent-blue: #2563eb;
-            --accent-orange: #ea580c;
-            --card-bg: #ffffff;
-            --border-color: #e2e8f0;
-            --tag-dev-bg: #e2e8f0;
-            --tag-dev-text: #334155;
-            --tag-prod-bg: #dcfce7;
-            --tag-prod-text: #166534;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.6;
-            padding: 2rem 1rem;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            color: #0f172a;
-            letter-spacing: -0.5px;
-            margin-bottom: 0.5rem;
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-        }
-
-        .contact-links {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-            font-size: 0.95rem;
-        }
-
-        .contact-links a {
-            color: var(--accent-blue);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .contact-links a:hover {
-            text-decoration: underline;
-        }
-
-        .intro {
-            background-color: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 3rem;
-            font-size: 1.05rem;
-        }
-
-        .project-card {
-            background-color: var(--card-bg);
-            border-left: 6px solid var(--accent-blue);
-            border-radius: 4px 8px 8px 4px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease-in-out;
-        }
-
-        .project-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .project-title h2 {
-            font-size: 1.5rem;
-            color: #0f172a;
-            margin-bottom: 0.25rem;
-        }
-
-        .tech-stack {
-            font-size: 0.9rem;
-            color: var(--accent-orange);
-            font-weight: 600;
-        }
-
-        .status {
-            font-size: 0.85rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .status.dev { background-color: var(--tag-dev-bg); color: var(--tag-dev-text); }
-        .status.prod { background-color: var(--tag-prod-bg); color: var(--tag-prod-text); }
-
-        h3 {
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            margin: 1.5rem 0 0.5rem 0;
-        }
-
-        ul {
-            padding-left: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        li {
-            margin-bottom: 0.5rem;
-        }
-
-        .flow-diagram {
-            background-color: var(--bg-color);
-            padding: 1rem;
-            border-radius: 6px;
-            border: 1px dashed #cbd5e1;
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-            font-size: 0.9rem;
-            text-align: center;
-            margin-top: 1.5rem;
-            color: #0f172a;
-            font-weight: 600;
-            overflow-x: auto;
-        }
-
-        @media (max-width: 600px) {
-            .project-header {
-                flex-direction: column;
-            }
-            .status {
-                align-self: flex-start;
-            }
-        }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Matías Richter — Software Developer &amp; Systems Engineering</title>
+    <meta name="description" content="Architecture dossier of Matías Richter: high-performance C++ simulation, full-stack logistics and telemetry systems. Includes a live WebAssembly demo of Swarf, a real-time CNC machining simulator.">
+    <meta name="author" content="Matías Richter">
+    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+    <link rel="canonical" href="https://mmrichter.github.io/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Matías Richter">
+    <meta property="og:title" content="Matías Richter — Software Developer &amp; Systems Engineering">
+    <meta property="og:description" content="Architecture dossier of Matías Richter: high-performance C++ simulation, full-stack logistics and telemetry systems. Includes a live WebAssembly demo of Swarf, a real-time CNC machining simulator.">
+    <meta property="og:url" content="https://mmrichter.github.io/">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="es_AR">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMyNTYzZWIiLz48dGV4dCB4PSIzMiIgeT0iNDMiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWksc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+TVI8L3RleHQ+PC9zdmc+">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/i18n.js" defer></script>
+    <script src="assets/js/projects.js" defer></script>
+    <script src="assets/js/main.js" defer></script>
 </head>
 <body>
 
+    <a class="skip-link" href="#main" data-i18n="a11y.skip">Skip to content</a>
+
     <div class="container">
-        <header>
-            <h1>Matías Richter</h1>
-            <p class="subtitle">Software Developer | Systems Engineering | Architecture Dossier</p>
-            <div class="contact-links">
-                <a href="mailto:richter.matias@gmail.com">richter.matias@gmail.com</a>
-                <a href="https://github.com/MMRichter" target="_blank" rel="noopener noreferrer">github.com/MMRichter</a>
-                <span>Tandil, Buenos Aires</span>
+        <header class="site-header">
+            <div class="lang-switch" role="group" aria-label="Language">
+                <button type="button" class="lang-btn is-active" data-lang="en" lang="en" aria-label="English" aria-pressed="true">EN</button>
+                <button type="button" class="lang-btn" data-lang="es" lang="es" aria-label="Español" aria-pressed="false">ES</button>
             </div>
+            <section class="about">
+                <img class="about__avatar" src="assets/img/avatar.svg" width="320" height="320" alt="Portrait of Matías Richter" data-i18n-alt="about.avatarAlt">
+                <div class="about__body">
+                    <h1>Matías Richter</h1>
+                    <p class="subtitle" data-i18n="about.role">Software Developer | Systems Engineering | Architecture Dossier</p>
+                    <p class="about__bio" data-i18n="about.bio">I design and build high-performance software: real-time simulation engines in C++, full-stack logistics platforms and data services. Most of the systems I work on are private or still in development, so this site documents the architecture and the engineering decisions instead of the source code.</p>
+                    <div class="contact-links">
+                        <a href="mailto:richter.matias@gmail.com">richter.matias@gmail.com</a>
+                        <a href="https://github.com/MMRichter" target="_blank" rel="noopener noreferrer">github.com/MMRichter</a>
+                        <span data-i18n="about.location">Tandil, Buenos Aires</span>
+                    </div>
+                </div>
+            </section>
         </header>
 
-        <section class="intro">
-            <p><strong>Professional Overview:</strong> This dossier outlines the architecture, engineering logic, and business impact of my recent private and in-development software projects. Due to the proprietary nature of some systems, source code is omitted in favor of structural and architectural case studies, demonstrating a focus on high-performance computing, low-level optimization, and scalable backend design.</p>
-        </section>
+        <main id="main">
+            <section class="intro">
+                <p><strong data-i18n="intro.lead">Professional Overview:</strong> <span data-i18n="intro.body">This dossier outlines the architecture, engineering logic, and business impact of my recent private and in-development software projects. Due to the proprietary nature of some systems, source code is omitted in favor of structural and architectural case studies, demonstrating a focus on high-performance computing, low-level optimization, and scalable backend design.</span></p>
+            </section>
 
-        <!-- Project 1: Swarf -->
-        <article class="project-card">
-            <div class="project-header">
-                <div class="project-title">
-                    <h2>Swarf (Machining Simulation Engine)</h2>
-                    <div class="tech-stack">C++20 • CMake • OpenGL • Raylib</div>
-                </div>
-                <span class="status dev">Active Development</span>
-            </div>
-            
-            <h3>The Engineering Challenge</h3>
-            <p>Developing a cross-platform, real-time machining simulation tool that requires zero-latency execution and complex mathematical modeling without relying on pre-built commercial game engines.</p>
-            
-            <h3>Architecture & Implementation</h3>
-            <ul>
-                <li>Engineered a custom Signed Distance Fields (SDF) volumetric engine utilizing OpenGL and Raylib for hardware-accelerated rendering.</li>
-                <li>Implemented a complete GCode Parser with Macro Functions to accurately interpret and simulate industrial CNC instructions.</li>
-                <li>Applied modern C++20 memory management techniques (smart pointers, move semantics) to ensure continuous optimizations and prevent memory leaks during prolonged simulation runs.</li>
-            </ul>
+            <section class="projects" aria-labelledby="projects-title">
+                <h2 class="projects__title" id="projects-title" data-i18n="projects.title">Selected Work</h2>
+                <div class="project-list" id="project-list"></div>
+                <noscript>
+                    <p class="noscript-note">The project cards are rendered with JavaScript. You can also browse my public repositories on <a href="https://github.com/MMRichter" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+                </noscript>
+            </section>
+        </main>
 
-            <div class="flow-diagram">
-                GCode Input &rarr; Custom C++ Parser &rarr; Memory Optimizer &rarr; SDF Engine &rarr; OpenGL Render
-            </div>
-        </article>
-
-        <!-- Project 2: Logistics -->
-        <article class="project-card">
-            <div class="project-header">
-                <div class="project-title">
-                    <h2>Internal Logistics & Inventory System</h2>
-                    <div class="tech-stack">Java (Spring Boot) • Thymeleaf • JavaScript • Firebase</div>
-                </div>
-                <span class="status prod">In Production</span>
-            </div>
-            
-            <h3>The Business Problem</h3>
-            <p>A hardware retail chain experienced consistent bottlenecks, stock discrepancies, and failed merchandise transfers between branches due to manual, error-prone tracking processes.</p>
-            
-            <h3>Solution & Architecture</h3>
-            <ul>
-                <li>Architected a custom, full-stack logistics solution from the ground up to replace legacy processes.</li>
-                <li>Implemented Role-Based Access Control (RBAC) to ensure security and proper delegation across different branch managers.</li>
-                <li>Built robust front-end data validation using JavaScript pattern matching to intercept duplicate requests before hitting the backend API.</li>
-            </ul>
-
-            <h3>Production Impact</h3>
-            <ul>
-                <li><strong>100% Uptime:</strong> Successfully deployed and currently sustaining daily high-demand usage across all branches.</li>
-                <li><strong>Zero Discrepancies:</strong> Completely eliminated failed merchandise transfers and transit data losses.</li>
-            </ul>
-        </article>
-
-        <!-- Project 3: Telemetry -->
-        <article class="project-card">
-            <div class="project-header">
-                <div class="project-title">
-                    <h2>Vineyard Telemetry Fetcher</h2>
-                    <div class="tech-stack">Rust • JavaScript • Chart.js • REST APIs</div>
-                </div>
-                <span class="status prod">In Production</span>
-            </div>
-            
-            <h3>The Problem</h3>
-            <p>A third-party agricultural software vendor provided insufficient historical data storage for field temperature sensors, limiting long-term climate analysis for a vineyard.</p>
-            
-            <h3>Solution & Execution</h3>
-            <ul>
-                <li>Engineered a lightweight, high-performance data extraction service in <strong>Rust</strong> to automatically consume the vendor's REST API and safely pull data off-site.</li>
-                <li>Bypassed the storage constraints by creating a robust local data-store for historical telemetry persistence.</li>
-                <li>Developed an interactive, web-based dashboard using JavaScript and Chart.js, allowing stakeholders to visualize long-term hardware sensor trends instantly.</li>
-            </ul>
-
-            <div class="flow-diagram">
-                Field Sensor &rarr; Vendor API &rarr; Rust Telemetry Fetcher &rarr; Local Storage &rarr; JS Dashboard
-            </div>
-        </article>
-
+        <footer class="site-footer">
+            <p>© <span id="year">2026</span> <span data-i18n="footer.rights">Matías Richter. All rights reserved.</span></p>
+        </footer>
     </div>
 </body>
 </html>

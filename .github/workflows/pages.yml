@@ -1,0 +1,28 @@
+# Deploy estático del portfolio + demo Swarf en GitHub Pages.
+# No compila nada: publica los archivos ya versionados en la rama (ver docs/PUBLISH_DEMO.md).
+# upload-pages-artifact excluye .git/.github y los archivos ocultos por defecto.
+name: Deploy static site
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v5

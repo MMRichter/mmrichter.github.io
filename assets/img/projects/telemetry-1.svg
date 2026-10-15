@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Screenshot placeholder">
+  <style>
+    .bg { fill: #eef2f7; }
+    .ln { stroke: #94a3b8; }
+    .fg { fill: #64748b; }
+    .fg-strong { fill: #475569; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #131c2e; }
+      .ln { stroke: #475569; }
+      .fg { fill: #94a3b8; }
+      .fg-strong { fill: #cbd5e1; }
+    }
+  </style>
+  <rect class="bg" width="1280" height="720"/>
+  <rect class="ln" x="24" y="24" width="1232" height="672" rx="14" fill="none" stroke-width="4" stroke-dasharray="16 12"/>
+  <g class="ln" fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M470 420l130-96 96 72 120-140"/>
+    <path d="M470 244v232h340"/>
+  </g>
+  <circle class="fg" cx="816" cy="256" r="20"/>
+  <text class="fg-strong" x="640" y="522" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="42" font-weight="700">Telemetry</text>
+  <text class="fg" x="640" y="572" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="26">Placeholder — captura 1/1</text>
+</svg>
